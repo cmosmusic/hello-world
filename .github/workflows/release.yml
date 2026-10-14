@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - '**.aif'
+      - '**.wav'
       - '.github/workflows/release.yml'
 
 jobs:
@@ -19,7 +20,8 @@ jobs:
       - shell: bash
         run: |
           i=0
-          for f in *.aif; do
+          for f in *.aif *.wav; do
+            [ -f "$f" ] || continue
             inputs+=(-i "$f")
             filters+="[$i:a]"
             i=$((i + 1))
