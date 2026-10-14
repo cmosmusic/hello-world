@@ -1,0 +1,35 @@
+name: release
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Build master and stems zip
+        run: |
+          mkdir out
+          inputs=()
+          for f in *.wav; do inputs+=(-i "$f"); done
+          n=$(( ${#inputs[@]} / 2 ))
+          ffmpeg "${inputs[@]}" \
+            -filter_complex "amix=inputs=$n:normalize=0:duration=longest" \
+            -c:a pcm_s24le out/master.wav
+          zip out/stems.zip *.wav
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            out/master.wav
+            out/stems.zip
