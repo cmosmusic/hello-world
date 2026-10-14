@@ -4,10 +4,11 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths:
-      - '**.aif'
-      - '**.wav'
-      - '.github/workflows/release.yml'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
   build:
@@ -26,10 +27,33 @@ jobs:
             filters+="[$i:a]"
             i=$((i + 1))
           done
+          name="${GITHUB_REPOSITORY#*/}_${GITHUB_SHA}.wav"
+          echo "MASTER_FILE=$name" >> "$GITHUB_ENV"
           ffmpeg "${inputs[@]}" -filter_complex \
-          "${filters}amix=inputs=$i:normalize=0" "${{ github.event.repository.name }}_${{ github.sha }}.wav"
+            "${filters}amix=inputs=$i:normalize=0" "$name"
 
       - uses: actions/upload-artifact@v5
         with:
           name: master
-          path: "${{ github.event.repository.name }}_${{ github.sha }}.wav"
+          path: ${{ env.MASTER_FILE }}
+
+      - run: |
+          mkdir -p _site
+          cp "$MASTER_FILE" _site/
+          cat > _site/index.html <<EOF
+          <!doctype html>
+          <html lang="en">
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <title>Master</title>
+          <h1>Master</h1>
+          <audio controls preload="metadata" src="$MASTER_FILE"></audio>
+          </html>
+          EOF
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+      - uses: actions/deploy-pages@v4
+        id: deployment
