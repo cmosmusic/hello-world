@@ -1,42 +1,22 @@
-name: release
-
+name: Build Master
 
 on:
+  workflow_dispatch:
   push:
-    branches: [main]
-    paths: ['*.wav'] 
-
-permissions:
-  contents: write
+    branches: [master]
+    paths: ['*.aif']
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          lfs: true
-
-      - name: Install ffmpeg
-        run: sudo apt-get update && sudo apt-get install -y ffmpeg
-
-      - name: Build master and stems zip
-        run: |
-          mkdir out
-          inputs=()
-          for f in *.wav; do inputs+=(-i "$f"); done
-          n=$(( ${#inputs[@]} / 2 ))
-          ffmpeg "${inputs[@]}" \
-            -filter_complex "amix=inputs=$n:normalize=0:duration=longest" \
-            -c:a pcm_s24le out/master.wav
-          zip out/stems.zip *.wav
-
-
-
-      - uses: softprops/action-gh-release@v2
-        with:
-          tag_name: latest
-          target_commitish: ${{ github.sha }}
-          files: |
-            out/master.wav
-            out/stems.zip
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - run: |
+          for f in *.aif; do
+            inputs+=(-i "$f")
+            filters+="[$((i++)):a]"
+          done
+          ffmpeg "${inputs[@]}" -filter_complex \
+            "${filters}amix=inputs=$i:normalize=0" master.wav
+        shell: bash
