@@ -4,7 +4,9 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['*.aif']
+    paths:
+      - '**.aif'
+      - '.github/workflows/release.yml'
 
 jobs:
   build:
@@ -12,11 +14,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: sudo apt-get update && sudo apt-get install -y ffmpeg
-      - run: |
+      - shell: bash
+        run: |
+          i=0
           for f in *.aif; do
             inputs+=(-i "$f")
-            filters+="[$((i++)):a]"
+            filters+="[$i:a]"
+            i=$((i + 1))
           done
           ffmpeg "${inputs[@]}" -filter_complex \
             "${filters}amix=inputs=$i:normalize=0" master.wav
-        shell: bash
