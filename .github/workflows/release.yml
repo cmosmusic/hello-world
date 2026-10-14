@@ -25,9 +25,9 @@ jobs:
             i=$((i + 1))
           done
           ffmpeg "${inputs[@]}" -filter_complex \
-            "${filters}amix=inputs=$i:normalize=0" "${{ github.event.repository.name }}_${{ github.sha }}.wav"
+          "${filters}amix=inputs=$i:normalize=0" "${{ github.event.repository.name }}_${{ github.sha::7 }}.wav"
 
       - uses: actions/upload-artifact@v5
         with:
           name: master
-          path: "${{ github.event.repository.name }}_${{ github.sha }}.wav"
+          path: "${{ github.event.repository.name }}_${{ github.sha::7 }}.wav"
