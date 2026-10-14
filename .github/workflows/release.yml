@@ -1,7 +1,10 @@
 name: release
+
+
 on:
   push:
-    tags: ['v*']
+    branches: [main]
+    paths: ['*.wav'] 
 
 permissions:
   contents: write
@@ -28,8 +31,12 @@ jobs:
             -c:a pcm_s24le out/master.wav
           zip out/stems.zip *.wav
 
+
+
       - uses: softprops/action-gh-release@v2
         with:
+          tag_name: latest
+          target_commitish: ${{ github.sha }}
           files: |
             out/master.wav
             out/stems.zip
