@@ -12,12 +12,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+
       - run: sudo apt-get update && sudo apt-get install -y ffmpeg
-      - uses: actions/upload-artifact@v4
-        with:
-          name: master
-          path: master.wav
+
       - shell: bash
         run: |
           i=0
@@ -29,4 +27,6 @@ jobs:
           ffmpeg "${inputs[@]}" -filter_complex \
             "${filters}amix=inputs=$i:normalize=0" master.wav
 
-
+      - uses: actions/upload-artifact@v5
+        with:
+          name: master
